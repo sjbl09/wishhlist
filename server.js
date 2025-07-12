@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
@@ -5,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-
+require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -19,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/wishlist', {
+mongoose.connect(process.env.mongodb+srv://wishlistuser:<v9KMlosdVBH4GFCbe7Inz5o3lQCspPVd>@cluster0.xd17b0p.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
@@ -62,11 +63,11 @@ const authenticateToken = (req, res, next) => {
     
     if (!token) return res.status(401).json({ message: 'Authentication required' });
     
-    jwt.verify(token, 'your-secret-key', (err, user) => {
-        if (err) return res.status(403).json({ message: 'Invalid token' });
-        req.user = user;
-        next();
-    });
+    jwt.verify(token, process.env.v9KMlosdVBH4GFCbe7Inz5o3lQCspPVd, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Invalid token' });
+    req.user = user;
+    next();
+});
 };
 
 // Auth Routes
@@ -202,7 +203,7 @@ io.on('connection', (socket) => {
         socket.leave(userId);
     });
 });
-
+app.use(express.static('public'));
 server.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
 });
