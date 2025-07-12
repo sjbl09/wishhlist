@@ -1,0 +1,20 @@
+{
+  "name": "wishlist-backend",
+  "version": "1.0.0",
+  "description": "A social platform for innovators with real-time posts and messaging",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^6.0.0",
+    "bcrypt": "^5.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "socket.io": "^4.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}

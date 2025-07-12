@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist - Social Platform for Innovators</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Login/Register Screen */
+        .auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-card h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .auth-switch {
+            text-align: center;
+            color: #666;
+        }
+
+        .auth-switch a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Main App */
+        .app {
+            display: none;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            height: fit-content;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 16px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .content-area {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Post Creation */
+        .post-creator {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .post-creator h3 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .post-creator textarea {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .post-creator textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .post-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .post-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Posts Feed */
+        .post {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e1e5e9;
+            transition: all 0.3s ease;
+        }
+
+        .post:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .post-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .post-info h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .post-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .post-content {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .post-actions-bar {
+            display: flex;
+            gap: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .post-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .post-action:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+
+        /* Editor Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        /* Image Editor */
+        .image-editor {
+            display: flex;
+            gap: 20px;
+            height: 500px;
+        }
+
+        .editor-tools {
+            width: 200px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .editor-canvas {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #imageCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tool-group {
+            margin-bottom: 20px;
+        }
+
+        .tool-group h4 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .tool-btn {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tool-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tool-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e5e9;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Video Editor */
+        .video-editor {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-preview {
+            flex: 1;
+            background: #000;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-preview video {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+        }
+
+        .video-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .video-timeline {
+            flex: 1;
+            height: 60px;
+            background: #e1e5e9;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-track {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        /* Messenger */
+        .messenger {
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e1e5e9;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.sent .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .message-input {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .message-input input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* AI Chat */
+        .ai-chat {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e1e5e9;
+            border-radius: 15px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .ai-chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .ai-chat-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .ai-chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .ai-message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .ai-message.user {
+            justify-content: flex-end;
+        }
+
+        .ai-message-content {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            line-height: 1.5;
+        }
+
+        .ai-message.user .ai-message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .ai-message.assistant .ai-message-content {
+            background: #e8f2ff;
+            border-left: 4px solid #667eea;
+        }
+
+        .ai-chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .ai-chat-input textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 15px;
+            outline: none;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+        }
+
+        .ai-chat-input textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .ai-send-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            height: fit-content;
+        }
+
+        .ai-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .ai-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: relative;
+                top: 0;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .nav-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .image-editor {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .editor-tools {
+                width: 100%;
+            }
+        }
+
+        /* File Upload Styles */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .upload-placeholder {
+            border: 2px dashed #e1e5e9;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .upload-placeholder:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-placeholder.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login/Register Screen -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-card">
+            <h1>Wishlist</h1>
+            <div id="loginForm">
+                <h2 style="text-align: center; margin-bottom: 25px; color: #333;">Sign In</h2>
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="button" class="btn" onclick="login()">Sign In</button>
+                <div class="auth-switch">
+                    Don't have an account? <a href="#" onclick="showRegister()">Sign Up</a>
+                </div>
+            </div>
+            
+            <div id="registerForm" style="display: none;">
+                <h2 style="text-align: center; margin-bottom: 25px; color: #333;">Sign Up</h2>
+                <div class="form-group">
+                    <label for="regName">Full Name</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmPassword">Confirm Password</label>
+                    <input type="password" id="regConfirmPassword" required>
+                </div>
+                <button type="button" class="btn" onclick="register()">Sign Up</button>
+                <div class="auth-switch">
+                    Already have an account? <a href="#" onclick="showLogin()">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app" id="mainApp">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">Wishlist</div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn active" onclick="showSection('feed')">Feed</button>
+                        <button class="nav-btn" onclick="showSection('messenger')">Messages</button>
+                        <button class="nav-btn" onclick="openImageEditor()">Image Editor</button>
+                        <button class="nav-btn" onclick="openVideoEditor()">Video Editor</button>
+                        <button class="nav-btn" onclick="showSection('ai-chat')">AI Assistant</button>
+                        <button class="nav-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="main-content">
+                <div class="sidebar">
+                    <h3>Menu</h3>
+                    <ul class="sidebar-menu">
+                        <li><a href="#" onclick="showSection('feed')">🏠 Home Feed</a></li>
+                        <li><a href="#" onclick="showSection('messenger')">💬 Messages</a></li>
+                        <li><a href="#" onclick="showSection('profile')">👤 Profile</a></li>
+                        <li><a href="#" onclick="showSection('collaborate')">🤝 Collaborate</a></li>
+                        <li><a href="#" onclick="showSection('trending')">📈 Trending</a></li>
+                        <li><a href="#" onclick="showSection('settings')">⚙️ Settings</a></li>
+                    </ul>
+                </div>
+
+                <div class="content-area">
+                    <!-- Feed Section -->
+                    <div id="feed" class="section active">
+                        <div class="post-creator">
+                            <h3>Share Your Innovation</h3>
+                            <textarea id="postContent" placeholder="What's your next big idea? Share it with the community..."></textarea>
+                            <div class="post-actions">
+                                <button class="post-btn" onclick="createPost()">📝 Post Idea</button>
+                                <button class="post-btn" onclick="document.getElementById('postImage').click()">📷 Add Image</button>
+                                <button class="post-btn" onclick="document.getElementById('postVideo').click()">🎥 Add Video</button>
+                            </div>
+                            <input type="file" id="postImage" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                            <input type="file" id="postVideo" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+                        </div>
+
+                        <div id="postsContainer">
+                            <!-- Posts will be dynamically loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Messenger Section -->
+                    <div id="messenger" class="section">
+                        <div class="messenger">
+                            <div class="messages-container" id="messagesContainer">
+                                <!-- Messages will be loaded here -->
+                            </div>
+                            <div class="message-input">
+                                <input type="text" id="messageInput" placeholder="Type a message...">
+                                <button class="send-btn" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Chat Section -->
+                    <div id="ai-chat" class="section">
+                        <div class="ai-chat">
+                            <div class="ai-chat-header">
+                                <h3>🤖 AI Coding Assistant</h3>
+                                <p>Get help with your coding projects and technical questions</p>
+                            </div>
+                            <div class="ai-chat-messages" id="aiChatMessages">
+                                <div class="ai-message assistant">
+                                    <div class="ai-message-content">
+                                        👋 Hello! I'm your AI coding assistant. I can help you with programming questions, code reviews, debugging, and technical guidance. What would you like to work on today?
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ai-chat-input">
+                                <textarea id="aiChatInput" placeholder="Ask me anything about coding, algorithms, debugging, or technical concepts..."></textarea>
+                                <button class="ai-send-btn" onclick="sendAIMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Sections -->
+                    <div id="profile" class="section">
+                        <h2>Profile</h2>
+                        <p>Manage your profile and view your innovations.</p>
+                    </div>
+
+                    <div id="collaborate" class="section">
+                        <h2>Collaborate</h2>
+                        <p>Find collaborators and join exciting projects.</p>
+                    </div>
+
+                    <div id="trending" class="section">
+                        <h2>Trending</h2>
+                        <p>See what's trending in the innovation community.</p>
+                    </div>
+
+                    <div id="settings" class="section">
+                        <h2>Settings</h2>
+                        <p>Customize your experience and preferences.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Editor Modal -->
+    <div id="imageEditorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎨 Image Editor</h3>
+                <button class="close-btn" onclick="closeImageEditor()">×</button>
+            </div>
+            <div class="image-editor">
+                <div class="editor-tools">
+                    <div class="tool-group">
+                        <h4>Upload Image</h4>
+                        <div class="file-upload">
+                            <input type="file" id="imageUpload" accept="image/*" onchange="loadImage(event)">
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <p>📷 Click to upload image</p>
+                                <p style="font-size: 12px; margin-top: 5px;">or drag and drop</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-group">
+                        <h4>Adjustments</h4>
+                        <div class="slider-group">
+                            <label>Brightness</label>
+                            <input type="range" class="slider" id="brightness" min="0" max="200" value="100" oninput="applyFilters()">
+                        </div>
+                        <div class="slider-group">
+                            <label>Contrast</label>
+                            <input type="range" class="slider" id="contrast" min="0" max="200" value="100" oninput="applyFilters()">
+                        </div>
+                        <div class="slider-group">
+                            <label>Saturation</label>
+                            <input type="range" class="slider" id="saturation" min="0" max="200" value="100" oninput="applyFilters()">
+                        </div>
+                        <div class="slider-group">
+                            <label>Blur</label>
+                            <input type="range" class="slider" id="blur" min="0" max="10" value="0" oninput="applyFilters()">
+                        </div>
+                    </div>
+                    
+                    <div class="tool-group">
+                        <h4>Filters</h4>
+                        <button class="tool-btn" onclick="applyPresetFilter('grayscale')">Grayscale</button>
+                        <button class="tool-btn" onclick="applyPresetFilter('sepia')">Sepia</button>
+                        <button class="tool-btn" onclick="applyPresetFilter('invert')">Invert</button>
+                        <button class="tool-btn" onclick="resetFilters()">Reset</button>
+                    </div>
+                    
+                    <div class="tool-group">
+                        <h4>Actions</h4>
+                        <button class="tool-btn" onclick="downloadImage()">💾 Download</button>
+                        <button class="tool-btn" onclick="shareImage()">📤 Share</button>
+                    </div>
+                </div>
+                
+                <div class="editor-canvas">
+                    <div class="canvas-container">
+                        <canvas id="imageCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Editor Modal -->
+    <div id="videoEditorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎬 Video Editor</h3>
+                <button class="close-btn" onclick="closeVideoEditor()">×</button>
+            </div>
+            <div class="video-editor">
+                <div class="video-preview">
+                    <video id="videoPlayer" controls style="display: none;">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div id="videoUploadArea" class="upload-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white;">
+                        <div style="text-align: center;">
+                            <p style="font-size: 18px; margin-bottom: 10px;">🎥 Upload Video</p>
+                            <p style="font-size: 14px;">Click to select or drag and drop</p>
+                            <input type="file" id="videoUpload" accept="video/*" onchange="loadVideo(event)" style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-controls">
+                    <button class="tool-btn" onclick="playPauseVideo()">▶️ Play/Pause</button>
+                    <button class="tool-btn" onclick="muteVideo()">🔊 Mute</button>
+                    <div class="video-timeline">
+                        <div class="timeline-track" id="timelineTrack" style="width: 0%;"></div>
+                    </div>
+                    <button class="tool-btn" onclick="exportVideo()">💾 Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let socket = null;
+        let imageCanvas = null;
+        let imageCtx = null;
+        let originalImageData = null;
+        let currentVideo = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            // Initialize socket connection
+            socket = io('http://localhost:3000');
+            
+            // Initialize canvas
+            imageCanvas = document.getElementById('imageCanvas');
+            imageCtx = imageCanvas.getContext('2d');
+            
+            // Initialize drag and drop
+            initializeDragDrop();
+            
+            // Check if user is logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                socket.emit('user-connected', currentUser.id);
+                showApp();
+                loadPosts();
+            } else {
+                showAuth();
+            }
+            
+            // Setup socket event listeners
+            socket.on('new-post', (post) => {
+                renderPost(post);
+            });
+
+            socket.on('new-message', (message) => {
+                renderMessage(message);
+            });
+        }
+
+        // Authentication functions
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    currentUser = data.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    socket.emit('user-connected', currentUser.id);
+                    showApp();
+                    loadPosts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Error logging in');
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            if (!name || !email || !password || !confirmPassword) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    currentUser = data.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    socket.emit('user-connected', currentUser.id);
+                    showApp();
+                    loadPosts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Error registering');
+            }
+        }
+
+        function logout() {
+            socket.emit('user-disconnected', currentUser.id);
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showAuth();
+        }
+
+        function showAuth() {
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+
+        function showApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+        }
+
+        // Navigation functions
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(sectionId.replace('-', ' '))) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Post functions
+        async function createPost() {
+            const content = document.getElementById('postContent').value.trim();
+            if (!content) {
+                alert('Please enter some content for your post');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser.token}`
+                    },
+                    body: JSON.stringify({
+                        content,
+                        author: currentUser.id
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('postContent').value = '';
+                } else {
+                    alert('Error creating post');
+                }
+            } catch (error) {
+                alert('Error creating post');
+            }
+        }
+
+        async function loadPosts() {
+            try {
+                const response = await fetch('http://localhost:3000/api/posts', {
+                    headers: {
+                        'Authorization': `Bearer ${currentUser.token}`
+                    }
+                });
+                const posts = await response.json();
+                document.getElementById('postsContainer').innerHTML = '';
+                posts.forEach(post => renderPost(post));
+            } catch (error) {
+                console.error('Error loading posts:', error);
+            }
+        }
+
+        function renderPost(post) {
+            const container = document.getElementById('postsContainer');
+            const postElement = document.createElement('div');
+            postElement.className = 'post';
+            postElement.innerHTML = `
+                <div class="post-header">
+                    <div class="post-avatar">${post.author.name.charAt(0)}</div>
+                    <div class="post-info">
+                        <h4>${post.author.name}</h4>
+                        <div class="post-time">${formatTime(post.createdAt)}</div>
+                    </div>
+                </div>
+                <div class="post-content">${post.content}</div>
+                <div class="post-actions-bar">
+                    <button class="post-action" onclick="likePost('${post._id}')">
+                        👍 ${post.likes.length} Like${post.likes.length !== 1 ? 's' : ''}
+                    </button>
+                    <button class="post-action" onclick="commentPost('${post._id}')">
+                        💬 Comment
+                    </button>
+                    <button class="post-action" onclick="sharePost('${post._id}')">
+                        📤 Share
+                    </button>
+                    <button class="post-action" onclick="collaboratePost('${post._id}')">
+                        🤝 Collaborate
+                    </button>
+                </div>
+            `;
+            container.prepend(postElement);
+        }
+
+        async function likePost(postId) {
+            try {
+                await fetch(`http://localhost:3000/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentUser.token}`
+                    }
+                });
+                loadPosts();
+            } catch (error) {
+                console.error('Error liking post:', error);
+            }
+        }
+
+        function commentPost(postId) {
+            const comment = prompt('Enter your comment:');
+            if (comment) {
+                fetch(`http://localhost:3000/api/posts/${postId}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser.token}`
+                    },
+                    body: JSON.stringify({ content: comment })
+                }).then(() => loadPosts());
+            }
+        }
+
+        function sharePost(postId) {
+            alert('Post shared! (Feature would integrate with social media APIs)');
+        }
+
+        function collaboratePost(postId) {
+            alert('Collaboration request sent! (Feature would connect users)');
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            return `${Math.floor(diff / 86400000)}d ago`;
+        }
+
+        // File upload handlers
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    alert('Image uploaded! You can now edit it in the Image Editor.');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    alert('Video uploaded! You can now edit it in the Video Editor.');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Messenger functions
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            const messageObj = {
+                sender: currentUser.id,
+                content: message,
+                recipient: 'recipient_id_here', // You'll need to implement recipient selection
+                timestamp: new Date()
+            };
+            
+            socket.emit('send-message', messageObj);
+            messageInput.value = '';
+        }
+
+        function renderMessage(message) {
+            const container = document.getElementById('messagesContainer');
+            const isSent = message.sender === currentUser.id;
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isSent ? 'sent' : ''}`;
+            messageElement.innerHTML = `
+                <div class="message-content">
+                    <div><strong>${message.senderName || 'User'}</strong></div>
+                    <div>${message.content}</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                        ${formatTime(message.timestamp)}
+                    </div>
+                </div>
+            `;
+            container.appendChild(messageElement);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // AI Chat functions
+        async function sendAIMessage() {
+            const input = document.getElementById('aiChatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const sendBtn = document.querySelector('.ai-send-btn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Thinking...';
+            
+            addAIMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await callGeminiAPI(message);
+                addAIMessage(response, 'assistant');
+            } catch (error) {
+                addAIMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send';
+        }
+
+        function addAIMessage(content, sender) {
+            const container = document.getElementById('aiChatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `ai-message ${sender}`;
+            messageElement.innerHTML = `
+                <div class="ai-message-content">
+                    ${content}
+                </div>
+            `;
+            container.appendChild(messageElement);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function callGeminiAPI(userMessage) {
+            const API_KEY = 'AIzaSyDXjO4_JKswdaWXZEDN94Rp5gwXN_UzciM';
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+            
+            const prompt = `You are an expert coding assistant and technical mentor. You help developers with programming questions, code reviews, debugging, algorithm design, and technical concepts. 
+
+User Context: You're helping someone on a social platform for innovators called "Wishlist" where people share ideas and collaborate on projects.
+
+Guidelines:
+- Provide clear, practical coding help
+- Include code examples when relevant
+- Explain complex concepts in simple terms
+- Suggest best practices and optimization tips
+- Be encouraging and supportive
+- If asked about non-coding topics, gently redirect to coding/technical subjects
+- Keep responses concise but comprehensive
+
+User Question: ${userMessage}
+
+Please provide a helpful, detailed response:`;
+            
+            try {
+                const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates.length > 0) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('No response from AI');
+                }
+            } catch (error) {
+                console.error('AI API Error:', error);
+                throw error;
+            }
+        }
+
+        // Image Editor functions
+        function openImageEditor() {
+            document.getElementById('imageEditorModal').style.display = 'block';
+        }
+
+        function closeImageEditor() {
+            document.getElementById('imageEditorModal').style.display = 'none';
+        }
+
+        function loadImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    imageCanvas.width = img.width;
+                    imageCanvas.height = img.height;
+                    imageCtx.drawImage(img, 0, 0);
+                    originalImageData = imageCtx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+                    document.getElementById('uploadPlaceholder').style.display = 'none';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function applyFilters() {
+            if (!originalImageData) return;
+            
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+            const blur = document.getElementById('blur').value;
+            
+            imageCtx.putImageData(originalImageData, 0, 0);
+            
+            const filters = [
+                `brightness(${brightness}%)`,
+                `contrast(${contrast}%)`,
+                `saturate(${saturation}%)`,
+                `blur(${blur}px)`
+            ];
+            
+            imageCanvas.style.filter = filters.join(' ');
+        }
+
+        function applyPresetFilter(filter) {
+            if (!originalImageData) return;
+            
+            imageCtx.putImageData(originalImageData, 0, 0);
+            
+            switch(filter) {
+                case 'grayscale':
+                    imageCanvas.style.filter = 'grayscale(100%)';
+                    break;
+                case 'sepia':
+                    imageCanvas.style.filter = 'sepia(100%)';
+                    break;
+                case 'invert':
+                    imageCanvas.style.filter = 'invert(100%)';
+                    break;
+            }
+        }
+
+        function resetFilters() {
+            if (!originalImageData) return;
+            
+            document.getElementById('brightness').value = 100;
+            document.getElementById('contrast').value = 100;
+            document.getElementById('saturation').value = 100;
+            document.getElementById('blur').value = 0;
+            
+            imageCtx.putImageData(originalImageData, 0, 0);
+            imageCanvas.style.filter = 'none';
+        }
+
+        function downloadImage() {
+            if (!imageCanvas.width) {
+                alert('Please upload an image first');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = imageCanvas.toDataURL();
+            link.click();
+        }
+
+        function shareImage() {
+            if (!imageCanvas.width) {
+                alert('Please upload an image first');
+                return;
+            }
+            
+            alert('Image shared! (Feature would integrate with social media)');
+        }
+
+        // Video Editor functions
+        function openVideoEditor() {
+            document.getElementById('videoEditorModal').style.display = 'block';
+        }
+
+        function closeVideoEditor() {
+            document.getElementById('videoEditorModal').style.display = 'none';
+        }
+
+        function loadVideo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const video = document.getElementById('videoPlayer');
+            const uploadArea = document.getElementById('videoUploadArea');
+            
+            video.src = URL.createObjectURL(file);
+            video.style.display = 'block';
+            uploadArea.style.display = 'none';
+            
+            currentVideo = video;
+            
+            video.addEventListener('loadedmetadata', function() {
+                updateTimeline();
+            });
+            
+            video.addEventListener('timeupdate', function() {
+                updateTimeline();
+            });
+        }
+
+        function playPauseVideo() {
+            if (!currentVideo) {
+                alert('Please upload a video first');
+                return;
+            }
+            
+            if (currentVideo.paused) {
+                currentVideo.play();
+            } else {
+                currentVideo.pause();
+            }
+        }
+
+        function muteVideo() {
+            if (!currentVideo) {
+                alert('Please upload a video first');
+                return;
+            }
+            
+            currentVideo.muted = !currentVideo.muted;
+        }
+
+        function updateTimeline() {
+            if (!currentVideo) return;
+            
+            const progress = (currentVideo.currentTime / currentVideo.duration) * 100;
+            document.getElementById('timelineTrack').style.width = progress + '%';
+        }
+
+        function exportVideo() {
+            if (!currentVideo) {
+                alert('Please upload a video first');
+                return;
+            }
+            
+            alert('Video exported! (Feature would process and download video)');
+        }
+
+        // Drag and drop functionality
+        function initializeDragDrop() {
+            const uploadAreas = document.querySelectorAll('.upload-placeholder');
+            
+            uploadAreas.forEach(area => {
+                area.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+                
+                area.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+                
+                area.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (this.id === 'uploadPlaceholder') {
+                            if (file.type.startsWith('image/')) {
+                                const event = { target: { files: [file] } };
+                                loadImage(event);
+                            }
+                        } else if (this.id === 'videoUploadArea') {
+                            if (file.type.startsWith('video/')) {
+                                const event = { target: { files: [file] } };
+                                loadVideo(event);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // Handle Enter key in message inputs
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const activeElement = document.activeElement;
+                
+                if (activeElement.id === 'messageInput') {
+                    sendMessage();
+                } else if (activeElement.id === 'aiChatInput') {
+                    sendAIMessage();
+                }
+            }
+        });
+
+        // Auto-resize textareas
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'TEXTAREA') {
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+            }
+        });
+    </script>
+</body>
+</html>
